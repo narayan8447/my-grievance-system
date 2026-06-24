@@ -1,0 +1,121 @@
+# ========================================
+# CORE FASTAPI & WEB FRAMEWORK
+# ========================================
+fastapi==0.128.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.21
+starlette==0.50.0
+
+# ========================================
+# DATABASE (MongoDB)
+# ========================================
+motor==3.7.1
+pymongo==4.15.5
+
+# ========================================
+# AUTHENTICATION & SECURITY
+# ========================================
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==5.0.0
+PyJWT==2.8.0
+cryptography==46.0.3
+email-validator==2.1.0
+phonenumbers==8.13.26
+
+# ========================================
+# LLM & AI FRAMEWORKS
+# ========================================
+langchain==0.2.11
+langchain-core==0.2.23
+langchain-community==0.2.10
+langchain-groq==0.1.6
+langchain-text-splitters==0.2.2
+langgraph==0.1.5
+langsmith==0.1.147
+groq==0.37.1
+openai==1.7.2
+
+# ========================================
+# DOCUMENT PROCESSING
+# ========================================
+# OCR - Text extraction from images
+pytesseract==0.3.13
+Pillow==10.2.0
+
+# PDF processing
+PyPDF2==3.0.1
+
+# Word document processing
+python-docx==1.2.0
+lxml==6.0.2
+
+# ========================================
+# AUDIO PROCESSING
+# ========================================
+pydub==0.25.1
+
+# Speech Recognition - Voice Input Support
+SpeechRecognition==3.10.0
+openai-whisper==20231117
+pyaudio==0.2.14
+
+# Optional: For better audio processing
+soundfile==0.12.1
+librosa==0.10.1
+
+# ========================================
+# DATA PROCESSING
+# ========================================
+pandas==2.3.3
+numpy==1.26.4
+
+# ========================================
+# VALIDATION & SETTINGS
+# ========================================
+pydantic==2.12.5
+pydantic-settings==2.1.0
+pydantic_core==2.41.5
+python-dotenv==1.0.0
+
+# ========================================
+# HTTP & REQUESTS
+# ========================================
+httpx==0.25.2
+requests==2.31.0
+aiohttp==3.13.2
+httpcore==1.0.9
+
+# ========================================
+# UTILITIES
+# ========================================
+python-dateutil==2.8.2
+pytz==2025.2
+colorlog==6.8.0
+rich==14.2.0
+tqdm==4.67.1
+
+# ========================================
+# GRADIO UI
+# ========================================
+gradio==6.2.0
+gradio_client==2.0.2
+
+# ========================================
+# TESTING (Development only)
+# ========================================
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+
+# ========================================
+# TYPE CHECKING (Development only)
+# ========================================
+typing_extensions==4.15.0
+
+# ========================================
+# ADDITIONAL DEPENDENCIES
+# ========================================
+# For Whisper model dependencies
+torch>=2.0.0
+torchaudio>=2.0.0

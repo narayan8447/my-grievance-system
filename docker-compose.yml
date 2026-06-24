@@ -1,0 +1,171 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Backend API Service
+  # ============================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: grievance-backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Database
+      - MONGODB_URL=${MONGODB_URL}
+      - DATABASE_NAME=${DATABASE_NAME}
+      
+      # LLM Configuration
+      - LLM_PROVIDER=${LLM_PROVIDER:-groq}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_MODEL=${GROQ_MODEL:-llama-3.3-70b-versatile}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama2}
+      
+      # Security
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=${ALGORITHM:-HS256}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-43200}
+      
+      # Server
+      - HOST=0.0.0.0
+      - PORT=8000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      
+      # Departments & Categories
+      - DEPARTMENTS=${DEPARTMENTS}
+      - GRIEVANCE_CATEGORIES=${GRIEVANCE_CATEGORIES}
+    
+    env_file:
+      - .env
+    
+    volumes:
+      - ./logs:/app/logs
+      - ./app:/app/app  # Mount for development (hot reload)
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    networks:
+      - grievance-network
+    
+    depends_on:
+      - mongodb
+
+  # ============================================
+  # Gradio Frontend Service
+  # ============================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: grievance-frontend
+    command: python gradio_app_new.py
+    ports:
+      - "7863:7863"
+    environment:
+      - API_BASE_URL=http://backend:8000/api/v1
+    
+    volumes:
+      - ./gradio_app_new.py:/app/gradio_app_new.py
+    
+    restart: unless-stopped
+    
+    depends_on:
+      backend:
+        condition: service_healthy
+    
+    networks:
+      - grievance-network
+
+  # ============================================
+  # MongoDB Service (Optional - for local development)
+  # Comment out if using MongoDB Atlas
+  # ============================================
+  mongodb:
+    image: mongo:7.0
+    container_name: grievance-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password123}
+      MONGO_INITDB_DATABASE: ${DATABASE_NAME:-grievance_db}
+    
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    networks:
+      - grievance-network
+
+  # ============================================
+  # Ollama Service (Optional - for local LLM)
+  # Uncomment if using Ollama instead of Groq
+  # ============================================
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: grievance-ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   restart: unless-stopped
+  #   networks:
+  #     - grievance-network
+
+  # ============================================
+  # Nginx Reverse Proxy (Optional - for production)
+  # ============================================
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: grievance-nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/ssl:/etc/nginx/ssl:ro
+  #     - ./nginx/logs:/var/log/nginx
+  #   depends_on:
+  #     - backend
+  #     - frontend
+  #   restart: unless-stopped
+  #   networks:
+  #     - grievance-network
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  grievance-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  # ollama_data:
+  #   driver: local

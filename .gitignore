@@ -1,0 +1,144 @@
+# ============================================
+# Python
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ============================================
+# Virtual Environments
+# ============================================
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# ============================================
+# Environment Variables
+# ============================================
+.env
+.env.local
+.env.*.local
+*.env
+
+# ============================================
+# IDE / Editor
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ============================================
+# Testing
+# ============================================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# ============================================
+# Jupyter Notebooks
+# ============================================
+.ipynb_checkpoints/
+*.ipynb
+
+# ============================================
+# Logs
+# ============================================
+*.log
+logs/
+*.log.*
+
+# ============================================
+# Database
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ============================================
+# Uploads / Temporary Files
+# ============================================
+uploads/
+temp/
+tmp/
+*.tmp
+
+# ============================================
+# OS Files
+# ============================================
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.Trash-*
+
+# ============================================
+# Docker
+# ============================================
+docker-compose.override.yml
+.dockerignore
+
+# ============================================
+# FastAPI
+# ============================================
+.cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ============================================
+# Gradio
+# ============================================
+gradio_cached_examples/
+flagged/
+
+# ============================================
+# API Keys and Secrets (Extra Safety)
+# ============================================
+*secret*
+*key*
+*credential*
+!requirements.txt
+!*.key.example
+!.env.example
+
+# ============================================
+# Project Specific
+# ============================================
+test_outputs/
+backups/
+old/
+archive/
