@@ -235,6 +235,8 @@ async def get_my_grievances(
         
         cursor = collection.find(query).sort("created_at", -1).skip(skip).limit(limit)
         grievances = await cursor.to_list(length=limit)
+        from app.utils.helpers import clean_doc
+        grievances = clean_doc(grievances)
         
         total = await collection.count_documents(query)
         
@@ -374,6 +376,8 @@ async def get_citizen_dashboard(
             status_counts[status_type] = count
         
         recent = await collection.find(query).sort("created_at", -1).limit(5).to_list(5)
+        from app.utils.helpers import clean_doc
+        recent = clean_doc(recent)
         for g in recent:
             if "_id" in g:
                 del g["_id"]

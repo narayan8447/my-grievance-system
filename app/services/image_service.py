@@ -1,6 +1,7 @@
 """Image processing service for grievances - ENHANCED with robust OCR"""
 import logging
 import base64
+import asyncio
 from io import BytesIO
 from PIL import Image
 from typing import Optional, Dict, Any
@@ -242,7 +243,8 @@ class ImageService:
             if 'tel' in self._tesseract_langs and 'eng' in self._tesseract_langs:
                 logger.info("🔤 Attempting OCR: Telugu + English")
                 try:
-                    text = pytesseract.image_to_string(
+                    text = await asyncio.to_thread(
+                        pytesseract.image_to_string,
                         image,
                         lang='tel+eng',
                         config='--psm 6 --oem 3'  # PSM 6: uniform block, OEM 3: LSTM
@@ -261,7 +263,8 @@ class ImageService:
             if 'eng' in self._tesseract_langs:
                 logger.info("🔤 Attempting OCR: English only")
                 try:
-                    text = pytesseract.image_to_string(
+                    text = await asyncio.to_thread(
+                        pytesseract.image_to_string,
                         image,
                         lang='eng',
                         config='--psm 6 --oem 3'
@@ -280,7 +283,8 @@ class ImageService:
             if 'tel' in self._tesseract_langs:
                 logger.info("🔤 Attempting OCR: Telugu only")
                 try:
-                    text = pytesseract.image_to_string(
+                    text = await asyncio.to_thread(
+                        pytesseract.image_to_string,
                         image,
                         lang='tel',
                         config='--psm 6 --oem 3'
@@ -298,7 +302,8 @@ class ImageService:
             # Strategy 4: Auto-detect language (fallback)
             logger.info("🔤 Attempting OCR: Auto-detect")
             try:
-                text = pytesseract.image_to_string(
+                text = await asyncio.to_thread(
+                    pytesseract.image_to_string,
                     image,
                     config='--psm 6 --oem 3'
                 )

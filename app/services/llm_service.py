@@ -1,7 +1,6 @@
 """LLM service for interacting with different LLM providers - ENHANCED"""
 import logging
 import asyncio
-from typing import Optional
 from app.config import settings
 
 logger = logging.getLogger(__name__)

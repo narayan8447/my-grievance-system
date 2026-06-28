@@ -86,3 +86,26 @@ def truncate_text(text: str, max_length: int = 200) -> str:
         return text
     
     return text[:max_length-3] + "..."
+
+
+def clean_doc(doc):
+    """
+    Recursively convert ObjectId instances in a document to strings.
+    Also handles lists of documents.
+    """
+    from bson import ObjectId
+    if doc is None:
+        return None
+    if isinstance(doc, list):
+        return [clean_doc(item) for item in doc]
+    if isinstance(doc, dict):
+        cleaned = {}
+        for k, v in doc.items():
+            if isinstance(v, ObjectId):
+                cleaned[k] = str(v)
+            elif isinstance(v, (dict, list)):
+                cleaned[k] = clean_doc(v)
+            else:
+                cleaned[k] = v
+        return cleaned
+    return doc

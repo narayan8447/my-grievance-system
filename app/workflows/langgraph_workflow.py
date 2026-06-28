@@ -14,7 +14,7 @@ from app.services.llm_service import llm_service
 from app.chains.understanding_chain import UnderstandingChain
 from app.chains.redressal_chain import RedressalChain
 from app.models.database import db
-from app.models.schemas import GrievanceStatus, Priority
+from app.models.schemas import GrievanceStatus
 
 logger = logging.getLogger(__name__)
 

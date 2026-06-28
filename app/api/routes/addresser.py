@@ -2,8 +2,8 @@
 Addresser-specific routes - NEW
 Department officers can view and update grievances assigned to their department
 """
-from fastapi import APIRouter, HTTPException, status, Depends, UploadFile, File
-from typing import Optional, List
+from fastapi import APIRouter, HTTPException, status, Depends
+from typing import Optional
 import logging
 from datetime import datetime
 
@@ -132,6 +132,8 @@ async def list_department_grievances(
         # Get grievances
         cursor = collection.find(query).sort("created_at", -1).skip(skip).limit(limit)
         grievances = await cursor.to_list(length=limit)
+        from app.utils.helpers import clean_doc
+        grievances = clean_doc(grievances)
         
         # Count total
         total = await collection.count_documents(query)

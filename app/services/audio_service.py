@@ -1,6 +1,6 @@
 """Audio processing and transcription service - ENHANCED"""
 import logging
-from typing import Optional
+import asyncio
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -13,6 +13,7 @@ class AudioService:
         self.supported_formats = ['mp3', 'wav', 'm4a', 'ogg', 'webm', 'flac']
         self.max_duration = 300  # 5 minutes max
         self.max_file_size = 25 * 1024 * 1024  # 25 MB (Groq limit)
+        self.local_model = None  # Cache for local Whisper model
     
     async def transcribe_audio(self, audio_data: bytes, language: str = "auto") -> dict:
         """
@@ -160,8 +161,12 @@ class AudioService:
             
             logger.info("🏠 Using local Whisper model")
             
-            # Load model (this will download on first use)
-            model = whisper.load_model("base")  # Options: tiny, base, small, medium, large
+            # Load and cache model lazily
+            if self.local_model is None:
+                logger.info("⏳ Loading local Whisper 'base' model into memory...")
+                # Run the model loading in a thread to keep FastAPI responsive
+                self.local_model = await asyncio.to_thread(whisper.load_model, "base")
+                logger.info("✅ Local Whisper model loaded and cached successfully.")
             
             # Save audio temporarily
             file_extension = self._detect_audio_format(audio_data)
@@ -173,7 +178,9 @@ class AudioService:
                 # Transcribe
                 lang_param = "te" if language == "te" else "en" if language == "en" else None
                 
-                result = model.transcribe(
+                # Offload heavy transcribing calculations (CPU bound) to a background thread
+                result = await asyncio.to_thread(
+                    self.local_model.transcribe,
                     tmp_path,
                     language=lang_param,
                     fp16=False  # Use FP32 for CPU compatibility

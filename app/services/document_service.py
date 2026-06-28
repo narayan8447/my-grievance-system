@@ -1,5 +1,6 @@
 """Document processing service with AI-powered entity extraction"""
 import logging
+import asyncio
 from typing import Optional, Dict, Any
 import re
 from io import BytesIO
@@ -132,18 +133,19 @@ class DocumentService:
     
     async def _extract_text_from_pdf(self, pdf_bytes: bytes) -> str:
         """Extract text from PDF"""
-        try:
+        def parse_pdf():
             import PyPDF2
-            
             pdf_file = BytesIO(pdf_bytes)
             pdf_reader = PyPDF2.PdfReader(pdf_file)
-            
             text = ""
             for page in pdf_reader.pages:
-                text += page.extract_text() + "\n"
-            
+                extracted = page.extract_text()
+                if extracted:
+                    text += extracted + "\n"
             return text.strip()
-            
+
+        try:
+            return await asyncio.to_thread(parse_pdf)
         except ImportError:
             logger.error("❌ PyPDF2 not installed. Run: pip install PyPDF2")
             return ""
@@ -153,16 +155,14 @@ class DocumentService:
     
     async def _extract_text_from_word(self, doc_bytes: bytes) -> str:
         """Extract text from Word document"""
-        try:
+        def parse_word():
             import docx
-            
             doc_file = BytesIO(doc_bytes)
             document = docx.Document(doc_file)
-            
-            text = "\n".join([paragraph.text for paragraph in document.paragraphs])
-            
-            return text.strip()
-            
+            return "\n".join([paragraph.text for paragraph in document.paragraphs]).strip()
+
+        try:
+            return await asyncio.to_thread(parse_word)
         except ImportError:
             logger.error("❌ python-docx not installed. Run: pip install python-docx")
             return ""

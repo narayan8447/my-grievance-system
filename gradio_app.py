@@ -4,13 +4,11 @@ All tabs included: Citizen (Submit, Track, My Grievances, Dashboard, Feedback)
 Admin (Dashboard, All Grievances, Update Status, Assign, Department Updates, Track)
 Addresser (Dashboard, Department Grievances, Submit Update, Track)
 """
+import os
 import gradio as gr
 import requests
-from datetime import datetime
-from typing import Optional, Tuple
-from PIL import Image
-from io import BytesIO
-import os
+from typing import Tuple
+from app.config import settings
 
 # Speech-to-Text imports
 try:
@@ -31,7 +29,8 @@ except ImportError:
     whisper_model = None
     print("⚠️ whisper not installed. Voice input will use Google Speech Recognition fallback.")
 
-API_BASE_URL = "http://localhost:8000/api/v1"
+# Centralized API Base URL from Settings
+API_BASE_URL = settings.API_BASE_URL
 
 CUSTOM_CSS = """
 .gradio-container {
@@ -57,11 +56,7 @@ CUSTOM_CSS = """
 }
 """
 
-DEPARTMENTS = [
-    "Roads and Buildings", "Water Supply", "Electricity", "Revenue",
-    "Health", "Education", "Police", "Municipal", "Agriculture",
-    "Transport", "Social Welfare", "Housing", "Public Distribution System (PDS)"
-]
+DEPARTMENTS = settings.DEPARTMENTS
 
 
 class CompleteGrievanceUI:
@@ -1653,6 +1648,41 @@ def create_complete_ui():
                             ]
                         )
                     
+                    # TAB 1b: Traditional Form Submission
+                    with gr.Tab("📝 Traditional Form Submission"):
+                        gr.Markdown("### 📝 Submit Grievance via Form\n\nIf you prefer to submit all information at once, please fill out the form below.")
+                        with gr.Column():
+                            form_text = gr.Textbox(
+                                label="Describe Your Grievance*",
+                                placeholder="Explain your issue in detail...",
+                                lines=5
+                            )
+                            with gr.Row():
+                                form_language = gr.Dropdown(
+                                    choices=["English", "Telugu"],
+                                    value="English",
+                                    label="Preferred Language"
+                                )
+                                form_location = gr.Textbox(
+                                    label="Location (Optional)",
+                                    placeholder="Ward/District/Area"
+                                )
+                            with gr.Row():
+                                form_image = gr.File(
+                                    label="📎 Upload Image (Optional)",
+                                    file_types=["image"]
+                                )
+                                form_audio = gr.File(
+                                    label="📎 Upload Audio (Optional)",
+                                    file_types=["audio"]
+                                )
+                                form_document = gr.File(
+                                    label="📎 Upload Document (Optional - PDF, Word)",
+                                    file_types=[".pdf", ".doc", ".docx"]
+                                )
+                            form_submit_btn = gr.Button("📤 Submit Grievance", variant="primary", elem_classes="submit-btn")
+                            form_submit_output = gr.Markdown()
+                    
                     # TAB 2-5: Keep existing tabs unchanged
                     with gr.Tab("🔍 Track Grievance"):
                         cit_track_id = gr.Textbox(label="Grievance ID")
@@ -1860,6 +1890,11 @@ def create_complete_ui():
         )
         
         # Citizen event handlers
+        form_submit_btn.click(
+            ui.citizen_submit_grievance,
+            inputs=[form_text, form_language, form_location, form_image, form_audio, form_document],
+            outputs=[form_submit_output]
+        )
         cit_track_btn.click(ui.citizen_track_grievance, cit_track_id, cit_track_output)
         cit_load_btn.click(ui.citizen_my_grievances, cit_status_filter, cit_my_grievances_output)
         cit_dashboard_btn.click(ui.citizen_dashboard, outputs=cit_dashboard_output)
@@ -1888,4 +1923,4 @@ if __name__ == "__main__":
     print("   Features: Submit, Track, Dashboard, Feedback, Assignment, Updates")
     print(f"   API: {API_BASE_URL}")
     demo = create_complete_ui()
-    demo.launch(server_name="localhost", server_port=7863, share=False, show_error=True)
+    demo.launch(server_name="0.0.0.0", server_port=7863, share=False, show_error=True)

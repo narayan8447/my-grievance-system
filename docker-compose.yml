@@ -67,14 +67,14 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: grievance-frontend
-    command: python gradio_app_new.py
+    command: python gradio_app.py
     ports:
       - "7863:7863"
     environment:
       - API_BASE_URL=http://backend:8000/api/v1
     
     volumes:
-      - ./gradio_app_new.py:/app/gradio_app_new.py
+      - ./gradio_app.py:/app/gradio_app.py
     
     restart: unless-stopped
     

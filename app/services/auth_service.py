@@ -4,7 +4,7 @@ Added: Department validation for addresser role
 """
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Tuple
 import uuid
 
 from app.models.user import User, UserRegister, UserLogin, UserRole
@@ -13,6 +13,8 @@ from app.utils.security import (
     get_password_hash,
     verify_password,
     create_access_token,
+    create_refresh_token,
+    decode_refresh_token,
     validate_email,
     validate_phone
 )
@@ -186,6 +188,34 @@ class AuthService:
             "department": user.department  # NEW: Include department in JWT
         }
         return create_access_token(token_data)
+    
+    def create_refresh_token_for_user(self, user: User) -> str:
+        """
+        Create JWT refresh token for user
+        """
+        token_data = {
+            "sub": user.user_id,
+            "email": user.email,
+            "role": user.role
+        }
+        return create_refresh_token(token_data)
+    
+    async def refresh_user_tokens(self, refresh_token: str) -> Tuple[str, str, User]:
+        """
+        Validate refresh token and issue a fresh access and refresh token pair
+        """
+        payload = decode_refresh_token(refresh_token)
+        user_id = payload.get("sub")
+        if not user_id:
+            raise ValueError("Invalid refresh token payload")
+        
+        user = await self.get_user_by_id(user_id)
+        if not user or not user.is_active:
+            raise ValueError("User not found or inactive")
+        
+        access_token = self.create_token_for_user(user)
+        new_refresh_token = self.create_refresh_token_for_user(user)
+        return access_token, new_refresh_token, user
     
     async def get_addressers_by_department(self, department: str) -> list:
         """

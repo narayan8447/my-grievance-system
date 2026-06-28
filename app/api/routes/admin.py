@@ -74,6 +74,16 @@ async def assign_grievance_to_department(
             "assigned_at": datetime.utcnow()
         }
         
+        # Add history if reassigning
+        if history_entry:
+            old_assignment = grievance.get("assignment") or {}
+            existing_history = old_assignment.get("assignment_history") or []
+            new_assignment["assignment_history"] = existing_history + [history_entry]
+        elif grievance.get("assignment") and isinstance(grievance["assignment"], dict) and "assignment_history" in grievance["assignment"]:
+            new_assignment["assignment_history"] = grievance["assignment"]["assignment_history"]
+        else:
+            new_assignment["assignment_history"] = []
+        
         # Update database
         update_data = {
             "assignment": new_assignment,
@@ -93,13 +103,6 @@ async def assign_grievance_to_department(
             "$set": update_data,
             "$push": {"processing_logs": log_entry}
         }
-        
-        # Add history if reassigning
-        if history_entry:
-            if "assignment_history" not in grievance:
-                update_operations["$set"]["assignment.assignment_history"] = [history_entry]
-            else:
-                update_operations["$push"]["assignment.assignment_history"] = history_entry
         
         result = await collection.update_one(
             {"grievance_id": grievance_id},
@@ -397,7 +400,9 @@ async def get_admin_dashboard(
                 count = await collection.count_documents({"assignment.assigned_to_department": dept})
                 department_counts[dept] = count
         
+        from app.utils.helpers import clean_doc
         recent = await collection.find().sort("created_at", -1).limit(10).to_list(10)
+        recent = clean_doc(recent)
         for g in recent:
             if "_id" in g:
                 del g["_id"]
@@ -448,10 +453,10 @@ async def admin_list_grievances(
             query["priority"] = priority
         
         cursor = collection.find(query).sort("created_at", -1).skip(skip).limit(limit)
+        from app.utils.helpers import clean_doc
         grievances = await cursor.to_list(length=limit)
-        
+        grievances = clean_doc(grievances)
         total = await collection.count_documents(query)
-        
         for g in grievances:
             if "_id" in g:
                 del g["_id"]

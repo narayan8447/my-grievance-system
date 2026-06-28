@@ -1,5 +1,6 @@
 """Configuration settings for the application"""
 from pydantic_settings import BaseSettings
+from pydantic import model_validator
 from typing import List
 
 
@@ -7,7 +8,7 @@ class Settings(BaseSettings):
     """Application settings"""
     
     # MongoDB
-    MONGODB_URL: str = ""
+    MONGODB_URL: str  # Required, no default fallback
     DATABASE_NAME: str = "grievance_db"
     
     # LLM Configuration
@@ -25,14 +26,16 @@ class Settings(BaseSettings):
     HUGGINGFACE_API_KEY: str = ""
 
     # JWT / Security
-    SECRET_KEY: str
+    SECRET_KEY: str  # Required, no default fallback
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 43200
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = 10080
     
     # Server
     HOST: str = "0.0.0.0"
     PORT: int = 8000
     LOG_LEVEL: str = "INFO"
+    API_BASE_URL: str = "http://localhost:8000/api/v1"
     
     # Languages
     SUPPORTED_LANGUAGES: List[str] = ["telugu", "english"]
@@ -48,7 +51,11 @@ class Settings(BaseSettings):
         "Police",
         "Municipal",
         "Agriculture",
-        "Social Welfare"
+        "Transport",
+        "Social Welfare",
+        "Housing",
+        "Public Distribution System (PDS)",
+        "General Administration"
     ]
     
     # Grievance Categories
@@ -65,10 +72,19 @@ class Settings(BaseSettings):
         "Education",
         "Others"
     ]
+
+    @model_validator(mode="after")
+    def validate_conditional_keys(self) -> "Settings":
+        """Ensure conditional credentials exist depending on selected LLM provider"""
+        if self.LLM_PROVIDER == "groq" and not self.GROQ_API_KEY.strip():
+            raise ValueError("GROQ_API_KEY must be configured when LLM_PROVIDER is set to 'groq'")
+        if self.LLM_PROVIDER == "huggingface" and not self.HUGGINGFACE_API_KEY.strip():
+            raise ValueError("HUGGINGFACE_API_KEY must be configured when LLM_PROVIDER is set to 'huggingface'")
+        return self
     
     class Config:
         env_file = ".env"
         case_sensitive = True
 
 
-settings = Settings()
+settings = Settings()

@@ -7,6 +7,7 @@ from app.models.user import (
     UserRegister,
     UserLogin,
     TokenResponse,
+    TokenRefresh,
     UserResponse,
     User
 )
@@ -36,6 +37,7 @@ async def register(user_data: UserRegister):
         
         # Create access token
         access_token = get_auth_service().create_token_for_user(user)
+        refresh_token = get_auth_service().create_refresh_token_for_user(user)
         
         # Create response
         user_response = UserResponse(
@@ -44,6 +46,7 @@ async def register(user_data: UserRegister):
             phone=user.phone,
             full_name=user.full_name,
             role=user.role,
+            department=user.department,
             location=user.location,
             is_active=user.is_active,
             created_at=user.created_at
@@ -51,6 +54,7 @@ async def register(user_data: UserRegister):
         
         return TokenResponse(
             access_token=access_token,
+            refresh_token=refresh_token,
             user=user_response
         )
         
@@ -97,6 +101,7 @@ async def login(login_data: UserLogin):
         
         # Create access token
         access_token = get_auth_service().create_token_for_user(user)
+        refresh_token = get_auth_service().create_refresh_token_for_user(user)
         
         # Create response
         user_response = UserResponse(
@@ -105,6 +110,7 @@ async def login(login_data: UserLogin):
             phone=user.phone,
             full_name=user.full_name,
             role=user.role,
+            department=user.department,
             location=user.location,
             is_active=user.is_active,
             created_at=user.created_at,
@@ -113,6 +119,7 @@ async def login(login_data: UserLogin):
         
         return TokenResponse(
             access_token=access_token,
+            refresh_token=refresh_token,
             user=user_response
         )
         
@@ -123,6 +130,51 @@ async def login(login_data: UserLogin):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Login failed. Please try again."
+        )
+
+
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_tokens(refresh_data: TokenRefresh):
+    """
+    Refresh access and refresh tokens using a valid refresh token
+    """
+    try:
+        access_token, new_refresh_token, user = await get_auth_service().refresh_user_tokens(
+            refresh_data.refresh_token
+        )
+        
+        user_response = UserResponse(
+            user_id=user.user_id,
+            email=user.email,
+            phone=user.phone,
+            full_name=user.full_name,
+            role=user.role,
+            department=user.department,
+            location=user.location,
+            is_active=user.is_active,
+            created_at=user.created_at,
+            last_login=user.last_login
+        )
+        
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=new_refresh_token,
+            user=user_response
+        )
+    except HTTPException:
+        raise
+    except ValueError as e:
+        logger.warning(f"Token refresh validation error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+    except Exception as e:
+        logger.error(f"Token refresh error: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Token refresh failed. Please try again."
         )
 
 
@@ -156,6 +208,7 @@ async def get_current_user(
             phone=user.phone,
             full_name=user.full_name,
             role=user.role,
+            department=user.department,
             location=user.location,
             is_active=user.is_active,
             created_at=user.created_at,
