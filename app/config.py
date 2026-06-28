@@ -1,14 +1,19 @@
 """Configuration settings for the application"""
 from pydantic_settings import BaseSettings
-from pydantic import model_validator
-from typing import List
+from pydantic import model_validator, Field, AliasChoices
+from typing import List, Optional
 
 
 class Settings(BaseSettings):
     """Application settings"""
     
+    ENVIRONMENT: str = "production"
+    
     # MongoDB
-    MONGODB_URL: str  # Required, no default fallback
+    MONGODB_URL: Optional[str] = Field(
+        default=None, 
+        validation_alias=AliasChoices("MONGO_URL", "MONGO_PUBLIC_URL", "MONGODB_URL")
+    )
     DATABASE_NAME: str = "grievance_db"
     
     # LLM Configuration
@@ -74,17 +79,32 @@ class Settings(BaseSettings):
     ]
 
     @model_validator(mode="after")
-    def validate_conditional_keys(self) -> "Settings":
-        """Ensure conditional credentials exist depending on selected LLM provider"""
+    def validate_environment(self) -> "Settings":
+        """Validate LLM credentials and MongoDB connection strings based on environment"""
+        # MongoDB Validation
+        if not self.MONGODB_URL:
+            if self.ENVIRONMENT == "development":
+                self.MONGODB_URL = "mongodb://localhost:27017"
+            else:
+                raise ValueError("MONGODB_URL (or MONGO_URL) is required in production environment.")
+        elif self.ENVIRONMENT == "production" and "localhost" in self.MONGODB_URL:
+            raise ValueError(
+                "Cannot use localhost MongoDB in production environment. "
+                "Please configure a valid external MONGODB_URL (or MONGO_URL)."
+            )
+
+        # LLM Validation
         if self.LLM_PROVIDER == "groq" and not self.GROQ_API_KEY.strip():
             raise ValueError("GROQ_API_KEY must be configured when LLM_PROVIDER is set to 'groq'")
         if self.LLM_PROVIDER == "huggingface" and not self.HUGGINGFACE_API_KEY.strip():
             raise ValueError("HUGGINGFACE_API_KEY must be configured when LLM_PROVIDER is set to 'huggingface'")
+        
         return self
     
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"
 
 
 settings = Settings()
