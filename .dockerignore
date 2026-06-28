@@ -1,0 +1,75 @@
+# Version control
+.git
+.gitignore
+
+# Python caches
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+
+# Virtual environments
+.venv
+venv
+env
+.venv/
+venv/
+env/
+
+# Environment secrets (never send to Docker context)
+.env
+.env.local
+.env.*.local
+
+# IDE / Editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Docker compose (not needed inside container)
+docker-compose.yml
+docker-compose.override.yml
+
+# Documentation and reports (not needed at runtime)
+*.md
+!README.md
+
+# Logs
+logs/
+*.log
+
+# Test outputs
+test_outputs/
+backups/
+old/
+archive/
+
+# Temporary files
+temp/
+tmp/
+uploads/
+*.tmp
+
+# Gradio cache
+gradio_cached_examples/
+flagged/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Settings (VS Code workspace config)
+settings.json

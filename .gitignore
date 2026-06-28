@@ -109,7 +109,6 @@ $RECYCLE.BIN/
 # Docker
 # ============================================
 docker-compose.override.yml
-.dockerignore
 
 # ============================================
 # FastAPI
@@ -128,10 +127,11 @@ flagged/
 # ============================================
 # API Keys and Secrets (Extra Safety)
 # ============================================
-*secret*
-*key*
-*credential*
-!requirements.txt
+# NOTE: Only match actual secret/key FILES, not source code containing "key" in the name.
+*.pem
+*.key
+*.cert
+*.p12
 !*.key.example
 !.env.example
 
@@ -141,4 +141,4 @@ flagged/
 test_outputs/
 backups/
 old/
-archive/
+archive/

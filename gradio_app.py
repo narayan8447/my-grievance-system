@@ -1918,9 +1918,12 @@ def create_complete_ui():
 
 
 if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 7863))
     print("🚀 Starting Complete Grievance System...")
     print("   Roles: Citizen | Admin | Addresser")
     print("   Features: Submit, Track, Dashboard, Feedback, Assignment, Updates")
     print(f"   API: {API_BASE_URL}")
+    print(f"   Frontend Port: {port}")
     demo = create_complete_ui()
-    demo.launch(server_name="0.0.0.0", server_port=7863, share=False, show_error=True)
+    demo.launch(server_name="0.0.0.0", server_port=port, share=False, show_error=True)

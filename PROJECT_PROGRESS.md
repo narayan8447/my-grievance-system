@@ -30,6 +30,7 @@ This document tracks the completion status of the backend infrastructure, databa
 | **Dependency Repairs** | Packaging & Environment fixes | **Completed** | Upgraded openai-whisper to resolve setuptools build crashes. Configured Windows-specific runtime guides for PyAudio and utf-8 encodings. Generated DEPENDENCY_FIX_REPORT.md, WINDOWS_SETUP_FIXES.md, and UPDATED_REQUIREMENTS.md. |
 | **Production Launch** | Final Portal Auth Repair & E2E Validation | **Completed** | Fixed UserResponse mappings, aligned departments config, added recursive BSON ObjectId deserializer, and passed comprehensive E2E tests. |
 | **Repository Cleanup** | Production Codebase Purification & Packaging | **Completed** | Classified files, purged bytecode caches, removed redundant duplicate templates, and prepared Git push staging guidelines. |
+| **Railway Deployment** | Cloud Deployment Hardening | **Completed** | Multi-stage Dockerfile, removed 2GB torch bloat, fixed dependency conflicts, dynamic PORT binding, .dockerignore, Railway service configuration. All 9 tests passing. |
 
 ---
 
@@ -155,3 +156,15 @@ This document tracks the completion status of the backend infrastructure, databa
 * **Git & Security Audits**: Confirmed `.gitignore` exclusions and validated that no hardcoded credentials remain in the codebase.
 * **Staging Preparation**: Created manual staging and commit guidelines for pushing to the remote repository.
 * **Release Artifacts**: Generated [REPOSITORY_CLEANUP_REPORT.md](file:///C:/Users/naray/.gemini/antigravity/brain/16aaa714-0bd5-48d9-85b7-00dddac2dec0/REPOSITORY_CLEANUP_REPORT.md), [FILES_REMOVED.md](file:///C:/Users/naray/.gemini/antigravity/brain/16aaa714-0bd5-48d9-85b7-00dddac2dec0/FILES_REMOVED.md), [FILES_RETAINED.md](file:///C:/Users/naray/.gemini/antigravity/brain/16aaa714-0bd5-48d9-85b7-00dddac2dec0/FILES_RETAINED.md), and [FINAL_REPOSITORY_STRUCTURE.md](file:///C:/Users/naray/.gemini/antigravity/brain/16aaa714-0bd5-48d9-85b7-00dddac2dec0/FINAL_REPOSITORY_STRUCTURE.md).
+
+### 22. Railway Cloud Deployment Hardening
+* **Multi-Stage Dockerfile**: Rewrote Dockerfile with a builder stage (compiles C extensions) and a slim runtime stage (no gcc/build-essential), reducing final image size by ~400MB.
+* **Python 3.11**: Downgraded from 3.12 to 3.11 to avoid `pkg_resources` / `setuptools` compatibility issues with transitive dependencies.
+* **Dependency Conflict Resolution**: Removed hard pins on `starlette==0.50.0` (conflicts with FastAPI's own range), `pydantic_core==2.41.5` (conflicts with pydantic's own binding), and `PyJWT==2.8.0` (duplicate of python-jose).
+* **2GB Bloat Removal**: Removed `openai-whisper`, `torch>=2.0.0`, and `torchaudio>=2.0.0` from production dependencies. Whisper is only a try/except fallback — primary audio transcription uses Groq Cloud API. Docker image reduced from ~3.5GB to ~1.1GB.
+* **Dynamic PORT Binding**: Both backend (Dockerfile CMD) and frontend (gradio_app.py) now read `PORT` from environment variable at runtime, required by Railway's dynamic port injection.
+* **Docker Context Optimization**: Created `.dockerignore` excluding `.git`, `.venv`, `__pycache__`, `.env`, IDE files, and documentation from Docker build context.
+* **Gitignore Safety Fixes**: Removed dangerous `*secret*`/`*key*` wildcards that could accidentally ignore source files. Removed `.dockerignore` from gitignore so it gets committed. Replaced with targeted `*.pem`/`*.key`/`*.cert` patterns.
+* **Environment Template**: Updated `.env.example` with Railway-specific notes and all required/optional variables documented.
+* **PYTHONUTF8=1**: Added to Dockerfile ENV to prevent emoji logging crashes on container startup.
+* **Test Verification**: All 9 unit and integration tests pass after all changes.
